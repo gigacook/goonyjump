@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>JUMPY GOONERS</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; font-family: "Chalkboard SE", "Comic Sans MS", "Trebuchet MS", sans-serif; touch-action: none;
+    background: #0b0524;
+    background-image:
+      radial-gradient(1.5px 1.5px at 12% 22%, #fff, transparent),
+      radial-gradient(1px 1px at 68% 8%, #9ff, transparent),
+      radial-gradient(2px 2px at 84% 64%, #f9f, transparent),
+      radial-gradient(1px 1px at 30% 78%, #ff9, transparent),
+      radial-gradient(1.5px 1.5px at 52% 44%, #fff, transparent);
+  }
+  @keyframes blink { 50% { opacity: .25; } }
+  .blink { animation: blink 1s step-start infinite; }
+  #game { display: block; width: 100vw; height: 100vh; }
+
+  #lobby {
+    position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(#1b2145, #10142a);
+    z-index: 10;
+  }
+  .panel {
+    background: linear-gradient(#2a3060, #1a1f45); border: 6px ridge #ff6ad5; border-radius: 8px;
+    padding: 26px 34px; color: #fff; width: 470px; max-width: 94vw;
+    box-shadow: 0 12px 40px rgba(0,0,0,.5);
+    max-height: 94vh; overflow-y: auto;
+    touch-action: pan-y;
+  }
+  h1 {
+    font-size: 34px; text-align: center; letter-spacing: 2px; margin-bottom: 2px;
+    color: #ffe066;
+    text-shadow: 2px 2px 0 #ff6ad5, 4px 4px 0 #4b56a8, 0 0 18px #ff6ad5;
+    transform: rotate(-2deg);
+  }
+  .sub { text-align: center; color: #9aa4e8; font-size: 13px; margin-bottom: 6px; }
+  #bestLine { text-align: center; color: #7ee08a; font-size: 12px; margin-bottom: 12px; }
+  label { display: block; font-size: 13px; color: #9aa4e8; margin: 12px 0 4px; text-transform: uppercase; letter-spacing: 1px; }
+  input[type=text] {
+    width: 100%; font-size: 20px; padding: 8px 12px; border-radius: 10px;
+    border: 3px solid #4b56a8; background: #171c3d; color: #ffe066; outline: none;
+    font-family: inherit;
+  }
+  input[type=text]:focus { border-color: #ffe066; }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .swatch {
+    width: 34px; height: 34px; border-radius: 50%; border: 3px solid transparent;
+    cursor: pointer; flex: none;
+  }
+  .swatch.sel { border-color: #ffe066; transform: scale(1.15); }
+  input[type=color] {
+    width: 44px; height: 38px; border: 3px solid #4b56a8; border-radius: 10px;
+    background: #171c3d; cursor: pointer; padding: 2px;
+  }
+  .hats { display: flex; gap: 8px; flex-wrap: wrap; }
+  .hatbtn {
+    background: #171c3d; border: 3px outset #4b56a8; color: #cfd6ff;
+    border-radius: 10px; padding: 6px 10px; font-size: 13px; cursor: pointer;
+    font-family: inherit;
+  }
+  .hatbtn.sel { border-color: #ffe066; color: #ffe066; background: #2b3468; }
+  .hatbtn.locked { opacity: .45; border-style: dashed; }
+  #preview { display: block; margin: 14px auto 0; background: transparent; }
+  #playBtn {
+    display: block; width: 100%; margin-top: 18px; font-size: 26px; padding: 12px;
+    border: none; border-radius: 14px; cursor: pointer; font-family: inherit;
+    background: linear-gradient(#ffd24d, #f5a623); color: #5b2d00;
+    font-weight: bold; letter-spacing: 2px;
+    box-shadow: 0 5px 0 #b8741b;
+    transition: transform .08s;
+  }
+  #playBtn:hover { transform: scale(1.03) rotate(-1deg); }
+  #playBtn:active { transform: translateY(4px); box-shadow: 0 1px 0 #b8741b; }
+  #joinInfo {
+    margin-top: 14px; text-align: center; font-size: 14px; color: #7ee08a;
+    background: #17203d; border-radius: 10px; padding: 8px; word-break: break-all;
+  }
+  .controls { margin-top: 12px; font-size: 12px; color: #8a93d6; text-align: center; line-height: 1.7; }
+  kbd {
+    background: #171c3d; border: 1px solid #4b56a8; border-bottom-width: 3px;
+    border-radius: 5px; padding: 1px 6px; font-family: inherit; color: #ffe066;
+  }
+  #err { color: #ff7a7a; text-align: center; margin-top: 10px; font-size: 14px; min-height: 18px; }
+
+  /* ---------- mobile touch controls ---------- */
+  #touchUI { display: none; position: fixed; inset: 0; pointer-events: none; z-index: 5; }
+  .tbtn {
+    position: absolute; pointer-events: auto;
+    border-radius: 50%; border: 3px solid rgba(255,255,255,.4);
+    background: rgba(255,255,255,.12); color: #fff;
+    font-family: inherit; font-weight: bold;
+    display: flex; align-items: center; justify-content: center;
+    user-select: none; -webkit-user-select: none; touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .tbtn:active { background: rgba(255,224,102,.35); }
+  #btnJump  { right: 18px;  bottom: 24px; width: 112px; height: 112px; font-size: 22px; }
+  #btnJet   { left: 18px;   bottom: 24px; width: 92px;  height: 92px;  font-size: 15px; border-color: rgba(122,184,255,.6); }
+  #btnTaunt { right: 148px; bottom: 42px; width: 62px;  height: 62px;  font-size: 26px; }
+  #btnLeft  { display: none; left: 18px;  bottom: 136px; width: 70px; height: 70px; font-size: 28px; }
+  #btnRight { display: none; left: 104px; bottom: 136px; width: 70px; height: 70px; font-size: 28px; }
+
+  /* ---------- admin sliders ---------- */
+  #admToggle {
+    display: none;  /* host only — game.js reveals it when the server says so */
+    position: fixed; top: 10px; left: 10px; z-index: 21; width: 36px; height: 36px;
+    align-items: center; justify-content: center; font-size: 19px;
+    background: rgba(23,28,61,.72); color: #ffe066; border: 2px solid #4b56a8;
+    border-radius: 9px; cursor: pointer; user-select: none; -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+  }
+  #admin {
+    display: none; position: fixed; top: 54px; left: 10px; z-index: 21; width: 250px;
+    background: linear-gradient(#2a3060, #1a1f45); border: 4px ridge #ff6ad5;
+    border-radius: 10px; padding: 12px 14px; color: #cfd6ff; font-size: 12px;
+    box-shadow: 0 8px 26px rgba(0,0,0,.5); touch-action: pan-y;
+  }
+  #admToggle.on { display: flex; }
+  #admin.on { display: block; }
+  #admin .ahead { color: #ffe066; text-align: center; letter-spacing: 1px; margin-bottom: 8px; }
+  #admin .arow { margin-bottom: 10px; }
+  #admin .arow .lbl { display: flex; justify-content: space-between; margin-bottom: 3px; }
+  #admin .arow .lbl b { color: #7ee08a; }
+  #admin input[type=range] {
+    width: 100%; accent-color: #ff6ad5; height: 26px; touch-action: pan-x;
+  }
+  #admReset {
+    width: 100%; font-family: inherit; font-size: 12px; padding: 5px;
+    background: #171c3d; border: 3px outset #4b56a8; color: #cfd6ff;
+    border-radius: 8px; cursor: pointer;
+  }
+  #admin .hint { text-align: center; color: #8a93d6; font-size: 10px; margin-top: 7px; }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="touchUI">
+  <div class="tbtn" id="btnJet">GOON<br>JET 💦</div>
+  <div class="tbtn" id="btnLeft">◀</div>
+  <div class="tbtn" id="btnRight">▶</div>
+  <div class="tbtn" id="btnTaunt">😩</div>
+  <div class="tbtn" id="btnJump">JUMP</div>
+</div>
+
+<div id="admToggle" title="admin (backtick key)">⚙</div>
+<div id="admin">
+  <div class="ahead">⚙ ADMIN — SEASON 2</div>
+  <div class="arow">
+    <div class="lbl"><span>⏱ TIME</span><b id="admTimeV">1.00×</b></div>
+    <input type="range" id="admTime" min="0.1" max="3" step="0.05" value="1">
+  </div>
+  <div class="arow">
+    <div class="lbl"><span>🌍 GRAVITY</span><b id="admGravV">1.00×</b></div>
+    <input type="range" id="admGrav" min="0.1" max="3" step="0.05" value="1">
+  </div>
+  <button id="admReset">RESET TO 1×</button>
+  <div class="hint">server-side · applies to every gooner</div>
+</div>
+
+<div id="lobby">
+  <div class="panel">
+    <h1>JUMPY GOONERS 💦</h1>
+    <div class="sub">a very serious co-op edging-up-a-tower simulator</div>
+    <div id="bestLine"></div>
+
+    <label>Gooner name</label>
+    <input type="text" id="nameInput" maxlength="14" spellcheck="false" autocomplete="off">
+
+    <label>🏆 Hall of Goon <span style="text-transform:none">(last seen, click to inspect)</span></label>
+    <div id="podium" style="background:#171c3d;border-radius:10px;padding:8px;font-size:11px;color:#8a93d6;text-align:center">no gooners witnessed yet</div>
+    <div id="inspect" style="display:none;margin-top:6px;background:#17203d;border-radius:10px;padding:8px;font-size:12px;color:#cfd6ff;text-align:center"></div>
+
+    <label>Character <span style="text-transform:none">(🔒 = unlock by level)</span></label>
+    <div class="hats" id="charRow"></div>
+
+    <label>Gooner color</label>
+    <div class="row" id="skinRow">
+      <input type="color" id="skinPick" title="custom color">
+    </div>
+
+    <label>Hat situation <span style="text-transform:none">(🔒 = unlock with high score)</span></label>
+    <div class="hats" id="hatRow"></div>
+
+    <label>Goon juice difficulty <span style="text-transform:none">(faster goo = more points)</span></label>
+    <div class="hats" id="diffRow"></div>
+
+    <label>Stats <span id="statPts" style="text-transform:none"></span>
+      <button id="statReset" class="hatbtn" style="padding:2px 6px;font-size:11px;text-transform:none">RESET ALL</button></label>
+    <div id="statRow"></div>
+
+    <label>Level perks</label>
+    <div id="perkList" style="font-size:12px;line-height:1.6;max-height:110px;overflow-y:auto;background:#171c3d;border-radius:10px;padding:8px"></div>
+
+    <label>Hat color</label>
+    <div class="row">
+      <input type="color" id="hatPick" title="hat color">
+      <canvas id="preview" width="140" height="130"></canvas>
+    </div>
+
+    <button id="playBtn">GOON UP!!</button>
+    <div id="err"></div>
+    <div id="activeGame" style="margin-top:12px;text-align:center;font-size:13px;color:#ffe066;background:#17203d;border-radius:10px;padding:7px">checking tower…</div>
+    <div id="joinInfo">finding LAN address…</div>
+    <div style="text-align:center;font-size:11px;color:#8a93d6;margin-top:10px">
+      <span class="blink">★</span> JUMPY GOONERS 2000 <span class="blink">★</span> best viewed at 800×600 <span class="blink">★</span> visitors: 0069420 <span class="blink">★</span>
+    </div>
+    <div class="controls">
+      <b>keyboard:</b> <kbd>←</kbd><kbd>→</kbd>/<kbd>A</kbd><kbd>D</kbd> run · <kbd>space</kbd>/<kbd>↑</kbd> jump ·
+      <kbd>shift</kbd> goon jet · <kbd>caps lock</kbd> GOON LASSO (full tank: drags the squad up, ricochets stragglers) · <kbd>T</kbd> taunt · <kbd>R</kbd> restart · <kbd>esc</kbd> lobby<br>
+      <b>phone:</b> lean to move 📱 · tap JUMP · hold GOON JET 💦<br>
+      run fast → jump higher · bounce off walls · skip floors for COMBOS ·
+      grab rare floating XLs (+100, bouncy!) · every 100th floor GLOWS → land it for a MEGA JUMP ·
+      fall in the goon juice → ghost → float back to a buddy · lifetime score levels you up (worn on the belly)
+    </div>
+  </div>
+</div>
+
+<script src="game.js?v=7"></script>
+</body>
+</html>

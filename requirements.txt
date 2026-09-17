@@ -1,0 +1,2 @@
+# JUMPY GOONERS uses the Python standard library only — nothing to install.
+# This file exists so Render detects the service as Python.

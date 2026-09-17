@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: jumpy-gooners
+    runtime: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python3 server.py"
+    envVars:
+      # Who may move the admin sliders. Render generates the value for you;
+      # read it in the dashboard, then open  https://<your-app>/?admin=<value>
+      - key: GOONER_ADMIN_KEY
+        generateValue: true
