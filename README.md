@@ -129,3 +129,9 @@ set the key and use `?admin=` if you tunnel.
 - `index.html` / `game.js` — the whole game
 - `start_game.command` — double-click launcher
 - `render.yaml` / `requirements.txt` — deploy config (stdlib only; nothing to install)
+
+## ☕ Support
+
+Free forever. If this game ruined a perfectly good LAN party in the best way, you can buy me a coffee (or a goon jet refill):
+
+[![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/gigacook)
